@@ -1,0 +1,10 @@
+/.gradle/
+/gradle/
+/libs/
+/.idea/
+/build/
+/.run/
+gradlew
+gradlew.bat
+*.iml
+*.log
