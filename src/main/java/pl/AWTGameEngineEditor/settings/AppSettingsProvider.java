@@ -28,12 +28,12 @@ public class AppSettingsProvider implements FileEditorProvider, DumbAware {
         // Prevent double-click
         if(opened.get()) {
             opened.set(false);
-            return new DummyEditor(project, file, () -> {}, opened);
+            return new DummyEditor(project, file, () -> {});
         }
         return new DummyEditor(project, file, () -> {
             opened.set(true);
             ShowSettingsUtil.getInstance().showSettingsDialog(project, AppSettings.class);
-        }, opened);
+        });
     }
 
     @Override

@@ -13,17 +13,14 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DummyEditor extends UserDataHolderBase implements FileEditor {
 
     private final VirtualFile file;
     private final JPanel dummyPanel = new JPanel();
-    private final AtomicBoolean opened;
 
-    public DummyEditor(Project project, VirtualFile file, Runnable operation, AtomicBoolean opened) {
+    public DummyEditor(Project project, VirtualFile file, Runnable operation) {
         this.file = file;
-        this.opened = opened;
         ApplicationManager.getApplication().invokeLater(() -> {
             FileEditorManager.getInstance(project).closeFile(file);
             operation.run();

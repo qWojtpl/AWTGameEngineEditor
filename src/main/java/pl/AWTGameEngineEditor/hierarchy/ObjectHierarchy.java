@@ -1,9 +1,9 @@
 package pl.AWTGameEngineEditor.hierarchy;
 
 import com.intellij.icons.AllIcons;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.content.Content;
@@ -14,6 +14,7 @@ import pl.AWTGameEngine.components.base.ObjectComponent;
 import pl.AWTGameEngine.objects.GameObject;
 import pl.AWTGameEngine.scenes.Scene;
 import pl.AWTGameEngineEditor.center.GameView;
+import pl.AWTGameEngineEditor.dialogs.ObjectPropertiesDialog;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -24,10 +25,15 @@ import java.awt.event.MouseEvent;
 
 public class ObjectHierarchy implements ToolWindowFactory {
 
+    private static ObjectHierarchy instance;
     private DefaultMutableTreeNode root;
+    private ToolWindow toolWindow;
 
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
+
+        instance = this;
+        this.toolWindow = toolWindow;
 
         root = new DefaultMutableTreeNode();
 
@@ -53,12 +59,20 @@ public class ObjectHierarchy implements ToolWindowFactory {
                 Object userObject = node.getUserObject();
 
                 if(e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
-
+                    if(userObject instanceof GameObject) {
+                        new ObjectPropertiesDialog(project, (GameObject) userObject).show();
+                    }
 
                 } else if(SwingUtilities.isRightMouseButton(e)) {
                     JPopupMenu popup = new JPopupMenu();
                     if(userObject instanceof GameObject) {
                         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                        // Edit
+                        JMenuItem editObject = new JMenuItem("Edit object properties", AllIcons.General.Modified);
+                        editObject.addActionListener(al -> {
+                            new ObjectPropertiesDialog(project, (GameObject) userObject).show();
+                        });
+                        popup.add(editObject);
                         // Add component
                         JMenuItem addComponent = new JMenuItem("Add component", AllIcons.General.Add);
                         addComponent.addActionListener(al -> {
@@ -78,11 +92,14 @@ public class ObjectHierarchy implements ToolWindowFactory {
 
         });
 
-        updateTree();
+        if(GameView.getInstance() != null) {
+            updateTree();
+        }
     }
 
-    private void updateTree() {
+    public void updateTree() {
         Scene scene = GameView.getInstance().getWindow().getCurrentScene();
+        toolWindow.setAnchor(ToolWindowAnchor.RIGHT, () -> {});
 
         root.setUserObject(scene);
 
@@ -96,6 +113,10 @@ public class ObjectHierarchy implements ToolWindowFactory {
                 objectNode.add(componentNode);
             }
         }
+    }
+
+    public static ObjectHierarchy getInstance() {
+        return instance;
     }
 
 }
