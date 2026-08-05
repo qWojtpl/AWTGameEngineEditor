@@ -25,10 +25,16 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-<!--        <toolWindow factoryClass="pl.AWTGameEngineEditor.Factory" id="factory" anchor="right" />-->
+        <moduleBuilder builderClass="pl.AWTGameEngineEditor.generators.ProjectGenerator" />
+        <toolWindow factoryClass="pl.AWTGameEngineEditor.Factory" id="Game" anchor="right" />
+        <fileEditorProvider implementation="pl.AWTGameEngineEditor.center.GameViewProvider" />
+        <projectConfigurable displayName="AWTGameEngine" instance="pl.AWTGameEngineEditor.settings.AppSettings" />
     </extensions>
 
     <actions>
-
+        <group id="GameEngine.Menu" text="Game Engine" popup="true">
+            <action class="pl.AWTGameEngineEditor.Test" text="Loops" />
+            <add-to-group group-id="MainMenu" />
+        </group>
     </actions>
 </idea-plugin>
