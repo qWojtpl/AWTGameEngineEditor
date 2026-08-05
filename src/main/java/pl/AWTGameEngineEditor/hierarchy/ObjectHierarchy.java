@@ -1,5 +1,6 @@
 package pl.AWTGameEngineEditor.hierarchy;
 
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -8,10 +9,8 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.treeStructure.SimpleTree;
-import com.intellij.util.concurrency.AppExecutorUtil;
 import org.jetbrains.annotations.NotNull;
 import pl.AWTGameEngine.components.base.ObjectComponent;
-import pl.AWTGameEngine.engine.WaitForSeconds;
 import pl.AWTGameEngine.objects.GameObject;
 import pl.AWTGameEngine.scenes.Scene;
 import pl.AWTGameEngineEditor.center.GameView;
@@ -22,74 +21,80 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 public class ObjectHierarchy implements ToolWindowFactory {
 
     private DefaultMutableTreeNode root;
-    private DefaultTreeModel treeModel;
-    private SimpleTree tree;
 
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
 
-        Scene scene = GameView.getInstance().getWindow().getCurrentScene();
+        root = new DefaultMutableTreeNode();
 
-        root = new DefaultMutableTreeNode(scene.getName());
-
-        treeModel = new DefaultTreeModel(root);
-        tree = new SimpleTree(treeModel);
+        DefaultTreeModel treeModel = new DefaultTreeModel(root);
+        SimpleTree tree = new SimpleTree(treeModel);
         tree.setRootVisible(true);
+        tree.setCellRenderer(new ObjectCellRenderer());
 
         JBScrollPane scrollPane = new JBScrollPane(tree);
         ContentFactory contentFactory = ContentFactory.getInstance();
         Content content = contentFactory.createContent(scrollPane, "", false);
         toolWindow.getContentManager().addContent(content);
-        AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() -> {
-            ApplicationManager.getApplication().invokeLater(this::updateTree);
-        }, 0, 1, TimeUnit.SECONDS);
+
+        tree.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+                if(path == null) {
+                    return;
+                }
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                Object userObject = node.getUserObject();
+
+                if(e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
+
+
+                } else if(SwingUtilities.isRightMouseButton(e)) {
+                    JPopupMenu popup = new JPopupMenu();
+                    if(userObject instanceof GameObject) {
+                        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                        // Add component
+                        JMenuItem addComponent = new JMenuItem("Add component", AllIcons.General.Add);
+                        addComponent.addActionListener(al -> {
+
+                        });
+                        popup.add(addComponent);
+                        // Remove object
+                        JMenuItem removeObject = new JMenuItem("Remove object", AllIcons.General.Remove);
+                        removeObject.addActionListener(al -> {
+
+                        });
+                        popup.add(removeObject);
+                    }
+                    popup.show(tree, e.getX(), e.getY());
+                }
+            }
+
+        });
+
+        updateTree();
     }
 
     private void updateTree() {
         Scene scene = GameView.getInstance().getWindow().getCurrentScene();
 
-        Set<String> expandedNodeNames = new HashSet<>();
-        Enumeration<TreePath> expandedPaths = tree.getExpandedDescendants(new TreePath(root));
-        if (expandedPaths != null) {
-            while (expandedPaths.hasMoreElements()) {
-                TreePath path = expandedPaths.nextElement();
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-                if (node.getUserObject() != null) {
-                    expandedNodeNames.add(node.getUserObject().toString());
-                }
-            }
-        }
-
-        root.setUserObject(scene.getName());
-
-        root.removeAllChildren();
+        root.setUserObject(scene);
 
         for(GameObject object : scene.getGameObjects()) {
-            DefaultMutableTreeNode objectNode = new DefaultMutableTreeNode(object.getIdentifier());
+            DefaultMutableTreeNode objectNode = new DefaultMutableTreeNode();
+            objectNode.setUserObject(object);
             root.add(objectNode);
             for(ObjectComponent component : object.getComponents()) {
-                DefaultMutableTreeNode componentNode = new DefaultMutableTreeNode(component.getClass().getCanonicalName());
+                DefaultMutableTreeNode componentNode = new DefaultMutableTreeNode();
+                componentNode.setUserObject(component);
                 objectNode.add(componentNode);
             }
-        }
-        treeModel.reload();
-        restoreExpansionState(tree, root, expandedNodeNames);
-    }
-
-    private void restoreExpansionState(SimpleTree tree, DefaultMutableTreeNode node, Set<String> expandedNames) {
-        if (node.getUserObject() != null && expandedNames.contains(node.getUserObject().toString())) {
-            tree.expandPath(new TreePath(node.getPath()));
-        }
-        for (int i = 0; i < node.getChildCount(); i++) {
-            restoreExpansionState(tree, (DefaultMutableTreeNode) node.getChildAt(i), expandedNames);
         }
     }
 

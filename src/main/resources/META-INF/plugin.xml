@@ -31,6 +31,9 @@
         <fileEditorProvider implementation="pl.AWTGameEngineEditor.settings.AppSettingsProvider" />
         <projectConfigurable displayName="AWTGameEngine" instance="pl.AWTGameEngineEditor.settings.AppSettings" />
     </extensions>
+    <applicationListeners>
+        <listener class="pl.AWTGameEngineEditor.center.GameViewListener" topic="com.intellij.openapi.fileEditor.FileEditorManagerListener" />
+    </applicationListeners>
 
     <actions>
         <group id="GameEngine.Menu" text="Game Engine" popup="true">
