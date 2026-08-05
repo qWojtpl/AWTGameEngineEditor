@@ -1,49 +1,48 @@
-package pl.AWTGameEngineEditor.center;
+package pl.AWTGameEngineEditor.util;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileEditor;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorState;
-import com.intellij.openapi.util.Key;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import pl.AWTGameEngine.Dependencies;
-import pl.AWTGameEngine.engine.enums.RenderEngine;
-import pl.AWTGameEngine.engine.panels.PanelGL;
-import pl.AWTGameEngine.windows.BaseWindow;
-import pl.AWTGameEngine.windows.WindowsManager;
 
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class GameView implements FileEditor {
+public class DummyEditor extends UserDataHolderBase implements FileEditor {
 
-    private static GameView instance;
     private final VirtualFile file;
-    private final JPanel panel = new JPanel();
-    private final BaseWindow window;
+    private final JPanel dummyPanel = new JPanel();
+    private final AtomicBoolean opened;
 
-    public GameView(VirtualFile file) {
-        instance = this;
-        WindowsManager manager = Dependencies.getWindowsManager();
-        window = manager.createWindow("scenes/performance/vehicle.xml", RenderEngine.OPENGL, true);
-        panel.add(((PanelGL) window.getCurrentScene().getPanel()).getGlCanvas());
+    public DummyEditor(Project project, VirtualFile file, Runnable operation, AtomicBoolean opened) {
         this.file = file;
+        this.opened = opened;
+        ApplicationManager.getApplication().invokeLater(() -> {
+            FileEditorManager.getInstance(project).closeFile(file);
+            operation.run();
+        });
     }
 
     @Override
     public @NotNull JComponent getComponent() {
-        return panel;
+        return dummyPanel;
     }
 
     @Override
     public @Nullable JComponent getPreferredFocusedComponent() {
-        return panel;
+        return null;
     }
 
     @Override
     public @Nls(capitalization = Nls.Capitalization.Title) @NotNull String getName() {
-        return "GameView";
+        return file.getName();
     }
 
     @Override
@@ -78,25 +77,6 @@ public class GameView implements FileEditor {
 
     @Override
     public void dispose() {
-        window.close();
-    }
-
-    @Override
-    public <T> @Nullable T getUserData(@NotNull Key<T> key) {
-        return null;
-    }
-
-    @Override
-    public <T> void putUserData(@NotNull Key<T> key, @Nullable T value) {
 
     }
-
-    public BaseWindow getWindow() {
-        return this.window;
-    }
-
-    public static GameView getInstance() {
-        return instance;
-    }
-
 }

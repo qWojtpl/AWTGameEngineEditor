@@ -26,8 +26,9 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <moduleBuilder builderClass="pl.AWTGameEngineEditor.generators.ProjectGenerator" />
-        <toolWindow factoryClass="pl.AWTGameEngineEditor.Factory" id="Game" anchor="right" />
+        <toolWindow factoryClass="pl.AWTGameEngineEditor.hierarchy.ObjectHierarchy" id="Scene" anchor="right" />
         <fileEditorProvider implementation="pl.AWTGameEngineEditor.center.GameViewProvider" />
+        <fileEditorProvider implementation="pl.AWTGameEngineEditor.settings.AppSettingsProvider" />
         <projectConfigurable displayName="AWTGameEngine" instance="pl.AWTGameEngineEditor.settings.AppSettings" />
     </extensions>
 

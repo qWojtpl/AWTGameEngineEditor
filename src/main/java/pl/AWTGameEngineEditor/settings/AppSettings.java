@@ -7,30 +7,23 @@ import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.ColorPicker;
-import com.intellij.ui.ColorPickerListener;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.Nullable;
 import pl.AWTGameEngine.Dependencies;
-import pl.AWTGameEngine.engine.AppProperties;
 import pl.AWTGameEngine.objects.ColorObject;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
 
 public class AppSettings implements Configurable {
 
     private final Project project;
     private JPanel panel;
-    private JBTextField mainScenePath;
 
     public AppSettings(Project project) {
         this.project = project;
@@ -120,7 +113,7 @@ public class AppSettings implements Configurable {
 
     @Override
     public void apply() throws ConfigurationException {
-        System.out.println(mainScenePath.getText());
+
     }
 
 }
