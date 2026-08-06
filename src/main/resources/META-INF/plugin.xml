@@ -35,10 +35,4 @@
         <listener class="pl.AWTGameEngineEditor.center.GameViewListener" topic="com.intellij.openapi.fileEditor.FileEditorManagerListener" />
     </applicationListeners>
 
-    <actions>
-        <group id="GameEngine.Menu" text="Game Engine" popup="true">
-            <action class="pl.AWTGameEngineEditor.Test" text="Loops" />
-            <add-to-group group-id="MainMenu" />
-        </group>
-    </actions>
 </idea-plugin>

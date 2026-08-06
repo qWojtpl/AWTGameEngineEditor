@@ -40,6 +40,8 @@ public class GameView implements FileEditor {
     private final Camera camera;
     private double forward = 0, right = 0, up = 0;
     private double speed = 2;
+    private int previousX = -1;
+    private int previousY = -1;
 
     public GameView(Project project, VirtualFile file) {
         this.file = file;
@@ -133,16 +135,22 @@ public class GameView implements FileEditor {
             }
 
         });
+
         glCanvas.addMouseMotionListener(new MouseMotionListener() {
 
-            private int previousX = 0;
-            private int previousY = 0;
+
 
             @Override
             public void mouseDragged(MouseEvent e) {
                 if(!SwingUtilities.isRightMouseButton(e)) {
                     return;
                 }
+
+                if(previousX == -1 || previousY == -1) {
+                    previousX = e.getX();
+                    previousY = e.getY();
+                }
+
                 handleRotation(e.getX(), e.getY(), previousX, previousY);
 
                 previousX = e.getX();
@@ -154,6 +162,33 @@ public class GameView implements FileEditor {
 
             }
 
+        });
+        glCanvas.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                previousX = -1;
+                previousY = -1;
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
         });
         new Thread(() -> {
             while(!disposed) {

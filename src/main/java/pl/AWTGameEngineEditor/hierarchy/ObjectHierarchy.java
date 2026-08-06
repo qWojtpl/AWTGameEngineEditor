@@ -14,6 +14,7 @@ import pl.AWTGameEngine.components.base.ObjectComponent;
 import pl.AWTGameEngine.objects.GameObject;
 import pl.AWTGameEngine.scenes.Scene;
 import pl.AWTGameEngineEditor.center.GameView;
+import pl.AWTGameEngineEditor.dialogs.ComponentDialog;
 import pl.AWTGameEngineEditor.dialogs.ObjectPropertiesDialog;
 
 import javax.swing.*;
@@ -61,8 +62,9 @@ public class ObjectHierarchy implements ToolWindowFactory {
                 if(e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
                     if(userObject instanceof GameObject) {
                         new ObjectPropertiesDialog(project, (GameObject) userObject).show();
+                    } else if(userObject instanceof ObjectComponent) {
+                        new ComponentDialog(project, (ObjectComponent) userObject).show();
                     }
-
                 } else if(SwingUtilities.isRightMouseButton(e)) {
                     JPopupMenu popup = new JPopupMenu();
                     if(userObject instanceof GameObject) {
@@ -85,6 +87,19 @@ public class ObjectHierarchy implements ToolWindowFactory {
 
                         });
                         popup.add(removeObject);
+                    } else if(userObject instanceof ObjectComponent) {
+                        // Edit component
+                        JMenuItem editComponent = new JMenuItem("Edit component properties", AllIcons.General.Modified);
+                        editComponent.addActionListener(al -> {
+                            new ComponentDialog(project, (ObjectComponent) userObject).show();
+                        });
+                        popup.add(editComponent);
+                        // Remove component
+                        JMenuItem removeComponent = new JMenuItem("Remove component", AllIcons.General.Remove);
+                        removeComponent.addActionListener(al -> {
+
+                        });
+                        popup.add(removeComponent);
                     }
                     popup.show(tree, e.getX(), e.getY());
                 }

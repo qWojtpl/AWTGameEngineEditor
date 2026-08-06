@@ -9,21 +9,19 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.Nullable;
-import pl.AWTGameEngine.annotations.methods.SaveState;
 import pl.AWTGameEngine.objects.GameObject;
 import pl.AWTGameEngine.objects.transform.TransformSet;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.text.DefaultFormatter;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 
 public class ObjectPropertiesDialog extends DialogWrapper {
 
-    private GameObject gameObject;
-    private HashMap<String, JSpinner> spinners = new HashMap<>();
+    private final GameObject gameObject;
+    private final HashMap<String, JSpinner> spinners = new HashMap<>();
+
+    private JBCheckBox quaternionCheckBox;
 
     public ObjectPropertiesDialog(@Nullable Project project, GameObject gameObject) {
         super(project, true, true);
@@ -35,6 +33,15 @@ public class ObjectPropertiesDialog extends DialogWrapper {
     @Override
     protected @Nullable JComponent createCenterPanel() {
         FormBuilder builder = new FormBuilder();
+        setupForm(builder);
+        for(String name : spinners.keySet()) {
+            DialogHelper.enableAutoUpdate(spinners.get(name));
+            addSpinnerListener(name, spinners.get(name));
+        }
+        return builder.getPanel();
+    }
+
+    private void setupForm(FormBuilder builder) {
         builder.addLabeledComponent("Identifier", new JBTextField(gameObject.getIdentifier()));
         builder.addSeparator().addComponent(new JBLabel("Position"));
         builder.addLabeledComponent("X", createSpinner("posX", gameObject.getPosition().getX()));
@@ -53,7 +60,7 @@ public class ObjectPropertiesDialog extends DialogWrapper {
         wRotation.setComponent(createSpinner("rotW", gameObject.getQuaternionRotation().getW()));
         builder.addComponent(wRotation);
         wRotation.setVisible(false);
-        JBCheckBox quaternionCheckBox = new JBCheckBox("Quaternion rotation?", false);
+        quaternionCheckBox = new JBCheckBox("Quaternion rotation?", false);
         builder.addComponent(quaternionCheckBox);
         quaternionCheckBox.addChangeListener(e -> {
             wRotation.setVisible(quaternionCheckBox.isSelected());
@@ -68,45 +75,41 @@ public class ObjectPropertiesDialog extends DialogWrapper {
                 spinners.get("rotZ").setValue(gameObject.getRotation().getZ());
             }
         });
-        for(String name : spinners.keySet()) {
-            JComponent comp = spinners.get(name).getEditor();
-            JFormattedTextField field = (JFormattedTextField) comp.getComponent(0);
-            DefaultFormatter formatter = (DefaultFormatter) field.getFormatter();
-            formatter.setCommitsOnValidEdit(true);
-            spinners.get(name).addChangeListener(e -> {
-                if(name.startsWith("pos")) {
-                    gameObject.getPosition().set(
-                            (double) spinners.get("posX").getValue(),
-                            (double) spinners.get("posY").getValue(),
-                            (double) spinners.get("posZ").getValue()
-                    );
-                } else if(name.startsWith("siz")) {
-                    gameObject.getSize().set(
-                            (double) spinners.get("sizX").getValue(),
-                            (double) spinners.get("sizY").getValue(),
-                            (double) spinners.get("sizZ").getValue()
-                    );
-                } else if(name.startsWith("rot")) {
-                    if(quaternionCheckBox.isSelected()) {
-                        gameObject.getQuaternionRotation().setX((double) spinners.get("rotX").getValue());
-                        gameObject.getQuaternionRotation().setY((double) spinners.get("rotY").getValue());
-                        gameObject.getQuaternionRotation().setZ((double) spinners.get("rotZ").getValue());
-                        gameObject.getQuaternionRotation().setW((double) spinners.get("rotW").getValue());
-                    } else {
-                        gameObject.setRotation(new TransformSet(
-                                (double) spinners.get("rotX").getValue(),
-                                (double) spinners.get("rotY").getValue(),
-                                (double) spinners.get("rotZ").getValue()
-                        ));
-                    }
+    }
+
+    private void addSpinnerListener(String spinnerName, JSpinner spinner) {
+        spinner.addChangeListener(e -> {
+            if(spinnerName.startsWith("pos")) {
+                gameObject.getPosition().set(
+                        (double) spinners.get("posX").getValue(),
+                        (double) spinners.get("posY").getValue(),
+                        (double) spinners.get("posZ").getValue()
+                );
+            } else if(spinnerName.startsWith("siz")) {
+                gameObject.getSize().set(
+                        (double) spinners.get("sizX").getValue(),
+                        (double) spinners.get("sizY").getValue(),
+                        (double) spinners.get("sizZ").getValue()
+                );
+            } else if(spinnerName.startsWith("rot")) {
+                if(quaternionCheckBox.isSelected()) {
+                    gameObject.getQuaternionRotation().setX((double) spinners.get("rotX").getValue());
+                    gameObject.getQuaternionRotation().setY((double) spinners.get("rotY").getValue());
+                    gameObject.getQuaternionRotation().setZ((double) spinners.get("rotZ").getValue());
+                    gameObject.getQuaternionRotation().setW((double) spinners.get("rotW").getValue());
+                } else {
+                    gameObject.setRotation(new TransformSet(
+                            (double) spinners.get("rotX").getValue(),
+                            (double) spinners.get("rotY").getValue(),
+                            (double) spinners.get("rotZ").getValue()
+                    ));
                 }
-            });
-        }
-        return builder.getPanel();
+            }
+        });
     }
 
     private JSpinner createSpinner(String name, double value) {
-        JSpinner spinner = new JSpinner(new SpinnerNumberModel(value, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0.1));
+        JSpinner spinner = DialogHelper.createDoubleSpinner(value);
         spinners.put(name, spinner);
         return spinner;
     }
