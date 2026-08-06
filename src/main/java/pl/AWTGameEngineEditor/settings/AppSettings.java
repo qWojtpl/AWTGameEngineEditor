@@ -42,7 +42,7 @@ public class AppSettings implements Configurable {
     @Override
     public @Nullable JComponent createComponent() {
         try {
-            String[] lines = new String(getSettingsVirtualFile().getInputStream().readAllBytes(), StandardCharsets.UTF_8).split("\\r?\\n");
+            String[] lines = new String(getSettingsVirtualFile(project).getInputStream().readAllBytes(), StandardCharsets.UTF_8).split("\\r?\\n");
             FormBuilder builder = FormBuilder.createFormBuilder();
             boolean separator = false;
             for(String line : lines) {
@@ -127,8 +127,8 @@ public class AppSettings implements Configurable {
     public void apply() throws ConfigurationException {
         WriteAction.run(() -> {
             try {
-                String[] lines = new String(getSettingsVirtualFile().getInputStream().readAllBytes(), StandardCharsets.UTF_8).split("\\r?\\n");
-                OutputStream output = getSettingsVirtualFile().getOutputStream(this);
+                String[] lines = new String(getSettingsVirtualFile(project).getInputStream().readAllBytes(), StandardCharsets.UTF_8).split("\\r?\\n");
+                OutputStream output = getSettingsVirtualFile(project).getOutputStream(this);
                 for(String line : lines) {
                     String[] split = line.split("=");
                     Component component = keyComponent.getOrDefault(split[0], null);
@@ -165,12 +165,12 @@ public class AppSettings implements Configurable {
         }
     }
 
-    private VirtualFile getSettingsVirtualFile() throws IOException {
+    public static VirtualFile getSettingsVirtualFile(Project project) throws IOException {
         VirtualFile projectDir = ProjectUtil.guessProjectDir(project);
         assert projectDir != null;
         VirtualFile appProperties = projectDir.findFileByRelativePath("src/main/resources/app.properties");
         if(appProperties == null) {
-            appProperties = projectDir.createChildData(this, "src/main/resources/app.properties");
+            appProperties = projectDir.createChildData(project, "src/main/resources/app.properties");
             Dependencies.getResourceManager().getResource("app.properties");
         }
         return appProperties;

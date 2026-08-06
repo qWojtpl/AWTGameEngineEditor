@@ -18,7 +18,7 @@ public class GameViewProvider implements FileEditorProvider, DumbAware {
 
     @Override
     public @NotNull FileEditor createEditor(@NotNull Project project, @NotNull VirtualFile file) {
-        return new GameView(file);
+        return new GameView(project, file);
     }
 
     @Override

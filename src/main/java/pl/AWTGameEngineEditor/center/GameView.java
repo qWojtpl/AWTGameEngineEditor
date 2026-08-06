@@ -2,6 +2,7 @@ package pl.AWTGameEngineEditor.center;
 
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorState;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.jogamp.opengl.awt.GLCanvas;
@@ -9,6 +10,7 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.AWTGameEngine.Dependencies;
+import pl.AWTGameEngine.engine.AppProperties;
 import pl.AWTGameEngine.engine.Logger;
 import pl.AWTGameEngine.engine.WaitForSeconds;
 import pl.AWTGameEngine.engine.enums.KeyCode;
@@ -16,12 +18,15 @@ import pl.AWTGameEngine.engine.enums.RenderEngine;
 import pl.AWTGameEngine.engine.panels.PanelGL;
 import pl.AWTGameEngine.objects.render.Camera;
 import pl.AWTGameEngine.objects.transform.TransformSet;
+import pl.AWTGameEngine.scenes.SceneStateSaver;
 import pl.AWTGameEngine.windows.BaseWindow;
 import pl.AWTGameEngineEditor.hierarchy.ObjectHierarchy;
+import pl.AWTGameEngineEditor.settings.AppSettings;
 
 import javax.swing.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.io.InputStream;
 
 public class GameView implements FileEditor {
@@ -36,7 +41,7 @@ public class GameView implements FileEditor {
     private double forward = 0, right = 0, up = 0;
     private double speed = 2;
 
-    public GameView(VirtualFile file) {
+    public GameView(Project project, VirtualFile file) {
         this.file = file;
         instance = this;
         InputStream stream;
@@ -48,7 +53,15 @@ public class GameView implements FileEditor {
         Logger.setLevel(3);
         Logger.setCallerClass(true);
         Logger.setLogFile(false);
-        window = Dependencies.getWindowsManager().createNestedEditorWindow(stream, file.getCanonicalPath(), RenderEngine.OPENGL);
+        AppProperties appProperties;
+        try {
+            appProperties = new AppProperties("app.properties", AppSettings.getSettingsVirtualFile(project).getInputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Dependencies.setAppProperties(appProperties);
+        window = Dependencies.getWindowsManager().createNestedEditorWindow(stream, file.getCanonicalPath(),
+                RenderEngine.valueOf(appProperties.getProperty("renderEngine").toUpperCase()));
         GLCanvas glCanvas = ((PanelGL) window.getCurrentScene().getPanel()).getGlCanvas();
         window.setVisible(false);
         panel.add(glCanvas);
@@ -197,8 +210,10 @@ public class GameView implements FileEditor {
 
     @Override
     public void dispose() {
-        window.close();
+        window.getPhysicsLoop().start();
+        Dependencies.getWindowsManager().close(window);
         disposed = true;
+        System.gc();
     }
 
     @Override
