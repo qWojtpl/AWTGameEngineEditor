@@ -11,6 +11,7 @@ import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.Nullable;
 import pl.AWTGameEngine.annotations.methods.SaveState;
 import pl.AWTGameEngine.objects.GameObject;
+import pl.AWTGameEngine.objects.transform.TransformSet;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -92,11 +93,11 @@ public class ObjectPropertiesDialog extends DialogWrapper {
                         gameObject.getQuaternionRotation().setZ((double) spinners.get("rotZ").getValue());
                         gameObject.getQuaternionRotation().setW((double) spinners.get("rotW").getValue());
                     } else {
-                        gameObject.getRotation().set(
+                        gameObject.setRotation(new TransformSet(
                                 (double) spinners.get("rotX").getValue(),
                                 (double) spinners.get("rotY").getValue(),
                                 (double) spinners.get("rotZ").getValue()
-                        );
+                        ));
                     }
                 }
             });

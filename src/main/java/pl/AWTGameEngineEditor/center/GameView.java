@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.AWTGameEngine.Dependencies;
+import pl.AWTGameEngine.engine.Logger;
 import pl.AWTGameEngine.engine.WaitForSeconds;
 import pl.AWTGameEngine.engine.enums.KeyCode;
 import pl.AWTGameEngine.engine.enums.RenderEngine;
@@ -16,12 +17,12 @@ import pl.AWTGameEngine.engine.panels.PanelGL;
 import pl.AWTGameEngine.objects.render.Camera;
 import pl.AWTGameEngine.objects.transform.TransformSet;
 import pl.AWTGameEngine.windows.BaseWindow;
-import pl.AWTGameEngine.windows.WindowsManager;
 import pl.AWTGameEngineEditor.hierarchy.ObjectHierarchy;
 
 import javax.swing.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeListener;
+import java.io.InputStream;
 
 public class GameView implements FileEditor {
 
@@ -29,22 +30,27 @@ public class GameView implements FileEditor {
     private final VirtualFile file;
     private final JPanel panel = new JPanel();
     private final BaseWindow window;
+    private boolean disposed = false;
 
-    Camera camera;
-    double forward = 0, right = 0, up = 0;
-    double speed = 2;
+    private final Camera camera;
+    private double forward = 0, right = 0, up = 0;
+    private double speed = 2;
 
     public GameView(VirtualFile file) {
         this.file = file;
         instance = this;
-        WindowsManager manager = Dependencies.getWindowsManager();
-        window = manager.createWindow("scenes/performance/vehicle.xml", RenderEngine.OPENGL, true);
-        window.getPhysicsLoop().kill();
-        window.getUpdateLoop().kill();
-        window.getNetLoop().kill();
-        window.getGUILoop().kill();
-        window.setVisible(false);
+        InputStream stream;
+        try {
+            stream = file.getInputStream();
+        } catch(Exception e) {
+            stream = null;
+        }
+        Logger.setLevel(3);
+        Logger.setCallerClass(true);
+        Logger.setLogFile(false);
+        window = Dependencies.getWindowsManager().createNestedEditorWindow(stream, file.getCanonicalPath(), RenderEngine.OPENGL);
         GLCanvas glCanvas = ((PanelGL) window.getCurrentScene().getPanel()).getGlCanvas();
+        window.setVisible(false);
         panel.add(glCanvas);
         ObjectHierarchy.getInstance().updateTree();
         camera = window.getCurrentScene().getPanel().getCamera();
@@ -61,12 +67,7 @@ public class GameView implements FileEditor {
 
                 if(e.getKeyCode() == KeyCode.SHIFT.value) {
                     speed = 10;
-                    if(forward != 0) {
-                        forward = forward > 0 ? speed : -speed;
-                    }
-                    if(right != 0) {
-                        right = right > 0 ? speed : -speed;
-                    }
+                    updateSpeed();
                 }
 
                 if(e.getKeyCode() == KeyCode.W.value) {
@@ -81,7 +82,12 @@ public class GameView implements FileEditor {
                 if(e.getKeyCode() == KeyCode.D.value) {
                     right = speed;
                 }
-
+                if(e.getKeyCode() == KeyCode.Q.value) {
+                    up = speed;
+                }
+                if(e.getKeyCode() == KeyCode.E.value) {
+                    up = -speed;
+                }
             }
 
             @Override
@@ -92,16 +98,27 @@ public class GameView implements FileEditor {
                 if(e.getKeyCode() == KeyCode.A.value || e.getKeyCode() == KeyCode.D.value) {
                     right = 0;
                 }
+                if(e.getKeyCode() == KeyCode.Q.value || e.getKeyCode() == KeyCode.E.value) {
+                    up = 0;
+                }
                 if(e.getKeyCode() == KeyCode.SHIFT.value) {
                     speed = 2;
-                    if(forward != 0) {
-                        forward = forward > 0 ? speed : -speed;
-                    }
-                    if(right != 0) {
-                        right = right > 0 ? speed : -speed;
-                    }
+                    updateSpeed();
                 }
             }
+
+            private void updateSpeed() {
+                if(forward != 0) {
+                    forward = forward > 0 ? speed : -speed;
+                }
+                if(right != 0) {
+                    right = right > 0 ? speed : -speed;
+                }
+                if(up != 0) {
+                    up = up > 0 ? speed : -speed;
+                }
+            }
+
         });
         glCanvas.addMouseMotionListener(new MouseMotionListener() {
 
@@ -126,7 +143,7 @@ public class GameView implements FileEditor {
 
         });
         new Thread(() -> {
-            while(true) {
+            while(!disposed) {
                 handleMovement();
                 new WaitForSeconds((double) 1 / 60).here();
             }
@@ -181,6 +198,7 @@ public class GameView implements FileEditor {
     @Override
     public void dispose() {
         window.close();
+        disposed = true;
     }
 
     @Override
