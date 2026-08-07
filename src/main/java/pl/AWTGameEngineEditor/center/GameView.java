@@ -18,7 +18,6 @@ import pl.AWTGameEngine.engine.enums.RenderEngine;
 import pl.AWTGameEngine.engine.panels.PanelGL;
 import pl.AWTGameEngine.objects.render.Camera;
 import pl.AWTGameEngine.objects.transform.TransformSet;
-import pl.AWTGameEngine.scenes.SceneStateSaver;
 import pl.AWTGameEngine.windows.BaseWindow;
 import pl.AWTGameEngineEditor.hierarchy.ObjectHierarchy;
 import pl.AWTGameEngineEditor.settings.AppSettings;

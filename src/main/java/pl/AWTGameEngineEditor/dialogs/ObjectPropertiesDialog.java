@@ -3,7 +3,6 @@ package pl.AWTGameEngineEditor.dialogs;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.LabeledComponent;
-import com.intellij.ui.JBIntSpinner;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
@@ -13,7 +12,6 @@ import pl.AWTGameEngine.objects.GameObject;
 import pl.AWTGameEngine.objects.transform.TransformSet;
 
 import javax.swing.*;
-import javax.swing.text.DefaultFormatter;
 import java.util.HashMap;
 
 public class ObjectPropertiesDialog extends DialogWrapper {

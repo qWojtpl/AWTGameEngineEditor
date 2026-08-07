@@ -2,24 +2,18 @@ package pl.AWTGameEngineEditor.dialogs;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
-import com.intellij.ui.JBIntSpinner;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
-import com.jogamp.opengl.awt.GLCanvas;
 import org.jetbrains.annotations.Nullable;
-import pl.AWTGameEngine.Dependencies;
-import pl.AWTGameEngine.annotations.methods.FromXML;
 import pl.AWTGameEngine.annotations.methods.SaveState;
 import pl.AWTGameEngine.components.ParticleEmitter;
 import pl.AWTGameEngine.components.base.ObjectComponent;
 import pl.AWTGameEngine.engine.Logger;
 import pl.AWTGameEngine.engine.deserializers.XMLDeserializer;
-import pl.AWTGameEngine.engine.enums.RenderEngine;
-import pl.AWTGameEngine.engine.panels.PanelGL;
 import pl.AWTGameEngine.objects.GameObject;
 import pl.AWTGameEngine.objects.transform.TransformSet;
-import pl.AWTGameEngine.windows.Window;
+import pl.AWTGameEngineEditor.util.Preview;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -31,9 +25,9 @@ import java.util.HashMap;
 public class ComponentDialog extends DialogWrapper {
 
     private final ObjectComponent component;
-    private Window particleEmitterWindow;
     private final HashMap<String, Component> fields = new HashMap<>();
     private final HashMap<Component, Class<?>> fieldTypes = new HashMap<>();
+    private Preview preview;
 
     public ComponentDialog(@Nullable Project project, ObjectComponent component) {
         super(project);
@@ -171,34 +165,20 @@ public class ComponentDialog extends DialogWrapper {
     }
 
     private void disposeEmitter() {
-        if(particleEmitterWindow == null) {
+        if(preview == null) {
             return;
         }
-        particleEmitterWindow.getUpdateLoop().kill();
-        particleEmitterWindow.getRenderLoop().kill();
-        particleEmitterWindow.unloadScenes();
-        Dependencies.getWindowsManager().removeWindow(particleEmitterWindow);
-        System.gc();
-        particleEmitterWindow = null;
+        preview.disposePreview();
     }
 
     private void handleParticleEmitter(FormBuilder builder, ParticleEmitter e) {
-        particleEmitterWindow = (Window) Dependencies.getWindowsManager().createNestedEditorWindow(
-                Dependencies.getResourceManager().getResourceAsStream("editorScenes/particleEditor.xml"),
-                "editorScenes/particleEditor.xml", RenderEngine.OPENGL);
-        particleEmitterWindow.getRenderLoop().setTargetFps(60);
-        particleEmitterWindow.getUpdateLoop().setTargetFps(60);
-        particleEmitterWindow.getUpdateLoop().start();
-        JPanel panel = new JPanel();
-        GLCanvas canvas = ((PanelGL) particleEmitterWindow.getCurrentScene().getPanel()).getGlCanvas();
-        canvas.setSize(320, 180);
-        panel.add(canvas);
+        preview = new Preview();
+        preview.createPreview(builder, "editorScenes/particleEditor.xml");
         updateEmitter(e);
-        builder.addComponent(panel);
     }
 
     private void updateEmitter(ParticleEmitter e) {
-        GameObject object = particleEmitterWindow.getCurrentScene().getGameObjectByName("emitter");
+        GameObject object = preview.getWindow().getCurrentScene().getGameObjectByName("emitter");
         ParticleEmitter emitter = (ParticleEmitter) object.getComponentByClass(ParticleEmitter.class);
 
         emitter.setFadeOutStart(e.getFadeOutStart());
