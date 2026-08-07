@@ -1,4 +1,4 @@
-package pl.AWTGameEngineEditor.util;
+package pl.AWTGameEngineEditor.preview;
 
 import com.intellij.ui.components.JBSlider;
 import com.intellij.util.ui.FormBuilder;

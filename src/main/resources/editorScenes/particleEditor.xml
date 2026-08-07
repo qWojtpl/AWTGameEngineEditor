@@ -1,6 +1,0 @@
-<scene>
-    <object id="emitter" x="0" y="-30" z="0" size="10,10,10" rotation="45,0,0">
-        <ParticleEmitter />
-        <Skybox />
-    </object>
-</scene>

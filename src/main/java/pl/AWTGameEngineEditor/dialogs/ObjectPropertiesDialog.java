@@ -8,8 +8,12 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.Nullable;
+import pl.AWTGameEngine.components.Box3D;
+import pl.AWTGameEngine.components.Model3D;
 import pl.AWTGameEngine.objects.GameObject;
 import pl.AWTGameEngine.objects.transform.TransformSet;
+import pl.AWTGameEngineEditor.preview.Preview;
+import pl.AWTGameEngineEditor.preview.PreviewManager;
 
 import javax.swing.*;
 import java.util.HashMap;
@@ -18,6 +22,7 @@ public class ObjectPropertiesDialog extends DialogWrapper {
 
     private final GameObject gameObject;
     private final HashMap<String, JSpinner> spinners = new HashMap<>();
+    private final Preview preview = new Preview();
 
     private JBCheckBox quaternionCheckBox;
 
@@ -32,6 +37,7 @@ public class ObjectPropertiesDialog extends DialogWrapper {
     protected @Nullable JComponent createCenterPanel() {
         FormBuilder builder = new FormBuilder();
         setupForm(builder);
+        PreviewManager.create(builder, preview, PreviewManager.standardObjectPreview(gameObject));
         for(String name : spinners.keySet()) {
             DialogHelper.enableAutoUpdate(spinners.get(name));
             addSpinnerListener(name, spinners.get(name));
@@ -103,6 +109,7 @@ public class ObjectPropertiesDialog extends DialogWrapper {
                     ));
                 }
             }
+            PreviewManager.update(preview, PreviewManager.standardObjectPreview(gameObject));
         });
     }
 

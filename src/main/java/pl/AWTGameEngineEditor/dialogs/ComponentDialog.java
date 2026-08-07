@@ -7,13 +7,12 @@ import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.Nullable;
 import pl.AWTGameEngine.annotations.methods.SaveState;
-import pl.AWTGameEngine.components.ParticleEmitter;
 import pl.AWTGameEngine.components.base.ObjectComponent;
 import pl.AWTGameEngine.engine.Logger;
 import pl.AWTGameEngine.engine.deserializers.XMLDeserializer;
-import pl.AWTGameEngine.objects.GameObject;
 import pl.AWTGameEngine.objects.transform.TransformSet;
-import pl.AWTGameEngineEditor.util.Preview;
+import pl.AWTGameEngineEditor.preview.Preview;
+import pl.AWTGameEngineEditor.preview.PreviewManager;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -27,7 +26,7 @@ public class ComponentDialog extends DialogWrapper {
     private final ObjectComponent component;
     private final HashMap<String, Component> fields = new HashMap<>();
     private final HashMap<Component, Class<?>> fieldTypes = new HashMap<>();
-    private Preview preview;
+    private final Preview preview = new Preview();
 
     public ComponentDialog(@Nullable Project project, ObjectComponent component) {
         super(project);
@@ -114,9 +113,7 @@ public class ComponentDialog extends DialogWrapper {
                             "set" + name.substring(0,1).toUpperCase() + name.substring(1),
                             passValue
                     );
-                    if(component instanceof ParticleEmitter) {
-                        updateEmitter((ParticleEmitter) component);
-                    }
+                    PreviewManager.update(preview, component);
                 });
             } else if(fields.get(name) instanceof JBTextField field) {
                 field.getDocument().addDocumentListener(new DocumentListener() {
@@ -138,17 +135,14 @@ public class ComponentDialog extends DialogWrapper {
                                 "set" + name.substring(0,1).toUpperCase() + name.substring(1),
                                 passValue
                         );
-                        if(component instanceof ParticleEmitter) {
-                            updateEmitter((ParticleEmitter) component);
-                        }
+                        PreviewManager.update(preview, component);
                     }
                 });
             }
 
         }
-        if(component instanceof ParticleEmitter) {
-            handleParticleEmitter(builder, (ParticleEmitter) component);
-        }
+
+        PreviewManager.create(builder, preview, component);
         return builder.getPanel();
     }
 
@@ -169,26 +163,6 @@ public class ComponentDialog extends DialogWrapper {
             return;
         }
         preview.disposePreview();
-    }
-
-    private void handleParticleEmitter(FormBuilder builder, ParticleEmitter e) {
-        preview = new Preview();
-        preview.createPreview(builder, "editorScenes/particleEditor.xml");
-        updateEmitter(e);
-    }
-
-    private void updateEmitter(ParticleEmitter e) {
-        GameObject object = preview.getWindow().getCurrentScene().getGameObjectByName("emitter");
-        ParticleEmitter emitter = (ParticleEmitter) object.getComponentByClass(ParticleEmitter.class);
-
-        emitter.setFadeOutStart(e.getFadeOutStart());
-        emitter.setParticleSize(e.getParticleSize());
-        emitter.setLooped(e.isLooped());
-        emitter.setSprite(e.getSprite());
-        emitter.setTtl(e.getTtl());
-        emitter.setIterationsPerSecond(e.getIterationsPerSecond());
-        emitter.setIterationStep(e.getIterationStep());
-        emitter.setVectors(e.getVectors());
     }
 
 }
