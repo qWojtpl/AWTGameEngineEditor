@@ -22,7 +22,6 @@ public class PreviewManager {
         addTypeHandler(Model3D.class, modelHandler);
         addTypeHandler(Box3D.class, modelHandler);
         addTypeHandler(Plane3D.class, modelHandler);
-        addTypeHandler(TextRenderer3D.class, modelHandler);
     }
 
     public static void create(FormBuilder builder, Preview preview, ObjectComponent component) {

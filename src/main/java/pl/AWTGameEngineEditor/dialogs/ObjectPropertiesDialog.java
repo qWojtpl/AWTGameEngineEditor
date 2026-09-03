@@ -8,10 +8,8 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.Nullable;
-import pl.AWTGameEngine.components.Box3D;
-import pl.AWTGameEngine.components.Model3D;
 import pl.AWTGameEngine.objects.GameObject;
-import pl.AWTGameEngine.objects.transform.TransformSet;
+import pl.AWTGameEngine.objects.transform.Vector3;
 import pl.AWTGameEngineEditor.preview.Preview;
 import pl.AWTGameEngineEditor.preview.PreviewManager;
 
@@ -102,7 +100,7 @@ public class ObjectPropertiesDialog extends DialogWrapper {
                     gameObject.getQuaternionRotation().setZ((double) spinners.get("rotZ").getValue());
                     gameObject.getQuaternionRotation().setW((double) spinners.get("rotW").getValue());
                 } else {
-                    gameObject.setRotation(new TransformSet(
+                    gameObject.setRotation(new Vector3(
                             (double) spinners.get("rotX").getValue(),
                             (double) spinners.get("rotY").getValue(),
                             (double) spinners.get("rotZ").getValue()

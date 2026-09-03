@@ -10,7 +10,8 @@ import pl.AWTGameEngine.annotations.methods.SaveState;
 import pl.AWTGameEngine.components.base.ObjectComponent;
 import pl.AWTGameEngine.engine.Logger;
 import pl.AWTGameEngine.engine.deserializers.XMLDeserializer;
-import pl.AWTGameEngine.objects.transform.TransformSet;
+import pl.AWTGameEngine.engine.helpers.TextUtils;
+import pl.AWTGameEngine.objects.transform.Vector3;
 import pl.AWTGameEngineEditor.preview.Preview;
 import pl.AWTGameEngineEditor.preview.PreviewManager;
 
@@ -47,30 +48,30 @@ public class ComponentDialog extends DialogWrapper {
                 Object value = method.invoke(component);
                 if(value instanceof Float) {
                     JSpinner spinner = DialogHelper.createFloatSpinner((float) value);
-                    builder.addLabeledComponent(saveState.name(), spinner);
+                    builder.addLabeledComponent(TextUtils.toSentenceCase(saveState.name()), spinner);
                     fields.put(saveState.name(), spinner);
                     fieldTypes.put(spinner, Float.class);
                 } else if(value instanceof Double) {
                     JSpinner spinner = DialogHelper.createDoubleSpinner((double) value);
-                    builder.addLabeledComponent(saveState.name(), spinner);
+                    builder.addLabeledComponent(TextUtils.toSentenceCase(saveState.name()), spinner);
                     fields.put(saveState.name(), spinner);
                     fieldTypes.put(spinner, Double.class);
                 } else if(value instanceof Integer) {
                     JSpinner spinner = DialogHelper.createIntegerSpinner((int) value);
-                    builder.addLabeledComponent(saveState.name(), spinner);
+                    builder.addLabeledComponent(TextUtils.toSentenceCase(saveState.name()), spinner);
                     fields.put(saveState.name(), spinner);
                     fieldTypes.put(spinner, Integer.class);
                 } else if(value instanceof Long) {
                     JSpinner spinner = DialogHelper.createLongSpinner((long) value);
-                    builder.addLabeledComponent(saveState.name(), spinner);
+                    builder.addLabeledComponent(TextUtils.toSentenceCase(saveState.name()), spinner);
                     fields.put(saveState.name(), spinner);
                     fieldTypes.put(spinner, Long.class);
-                } else if(value instanceof TransformSet transformSet) {
+                } else if(value instanceof Vector3 vector3) {
                     builder.addSeparator();
-                    builder.addComponent(new JBLabel(saveState.name()));
-                    JSpinner x = DialogHelper.createDoubleSpinner(transformSet.getX());
-                    JSpinner y = DialogHelper.createDoubleSpinner(transformSet.getY());
-                    JSpinner z = DialogHelper.createDoubleSpinner(transformSet.getZ());
+                    builder.addComponent(new JBLabel(TextUtils.toSentenceCase(saveState.name())));
+                    JSpinner x = DialogHelper.createDoubleSpinner(vector3.getX());
+                    JSpinner y = DialogHelper.createDoubleSpinner(vector3.getY());
+                    JSpinner z = DialogHelper.createDoubleSpinner(vector3.getZ());
                     builder.addLabeledComponent("X", x);
                     builder.addLabeledComponent("Y", y);
                     builder.addLabeledComponent("Z", z);
@@ -81,7 +82,7 @@ public class ComponentDialog extends DialogWrapper {
                 } else {
                     JBTextField field = new JBTextField(value.toString());
                     fields.put(saveState.name(), field);
-                    builder.addLabeledComponent(saveState.name(), field);
+                    builder.addLabeledComponent(TextUtils.toSentenceCase(saveState.name()), field);
                 }
             } catch(Exception e) {
                 Logger.exception("Can't get variable from " + method.getName(), e);

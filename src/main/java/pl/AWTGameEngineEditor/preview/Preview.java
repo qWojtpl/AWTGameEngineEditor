@@ -8,7 +8,7 @@ import pl.AWTGameEngine.engine.enums.RenderEngine;
 import pl.AWTGameEngine.engine.helpers.RotationHelper;
 import pl.AWTGameEngine.engine.panels.PanelGL;
 import pl.AWTGameEngine.objects.render.Camera;
-import pl.AWTGameEngine.objects.transform.TransformSet;
+import pl.AWTGameEngine.objects.transform.Vector3;
 import pl.AWTGameEngine.windows.Window;
 
 import javax.swing.*;
@@ -63,9 +63,9 @@ public class Preview {
 
     private void updateRotation(Camera camera, JBSlider distanceSlider, JBSlider rotationSlider) {
         double[] camPos = RotationHelper.radiusLook(0, 0, 0, distanceSlider.getValue(), 0, rotationSlider.getValue());
-        camera.setPosition(new TransformSet(camPos[0], camPos[1], camPos[2]));
+        camera.setPosition(new Vector3(camPos[0], camPos[1], camPos[2]));
         double[] look = RotationHelper.lookAt(camera.getX(), camera.getY(), camera.getZ(), 0, 0, 0);
-        camera.setRotation(new TransformSet(look[0], look[1], look[2]));
+        camera.setRotation(new Vector3(look[0], look[1], look[2]));
     }
 
     public Window getWindow() {

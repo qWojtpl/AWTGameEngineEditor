@@ -2,6 +2,9 @@ package pl.AWTGameEngineEditor.center;
 
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorState;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -10,22 +13,19 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.AWTGameEngine.Dependencies;
-import pl.AWTGameEngine.engine.AppProperties;
 import pl.AWTGameEngine.engine.Logger;
 import pl.AWTGameEngine.engine.WaitForSeconds;
 import pl.AWTGameEngine.engine.enums.KeyCode;
 import pl.AWTGameEngine.engine.enums.RenderEngine;
 import pl.AWTGameEngine.engine.panels.PanelGL;
 import pl.AWTGameEngine.objects.render.Camera;
-import pl.AWTGameEngine.objects.transform.TransformSet;
+import pl.AWTGameEngine.objects.transform.Vector3;
 import pl.AWTGameEngine.windows.BaseWindow;
 import pl.AWTGameEngineEditor.hierarchy.ObjectHierarchy;
-import pl.AWTGameEngineEditor.settings.AppSettings;
 
 import javax.swing.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
 import java.io.InputStream;
 
 public class GameView implements FileEditor {
@@ -33,10 +33,10 @@ public class GameView implements FileEditor {
     private static GameView instance;
     private final VirtualFile file;
     private final JPanel panel = new JPanel();
-    private final BaseWindow window;
+    private BaseWindow window;
     private boolean disposed = false;
 
-    private final Camera camera;
+    private Camera camera;
     private double forward = 0, right = 0, up = 0;
     private double speed = 2;
     private int previousX = -1;
@@ -45,6 +45,137 @@ public class GameView implements FileEditor {
     public GameView(Project project, VirtualFile file) {
         this.file = file;
         instance = this;
+        ProgressManager.getInstance().run(new Task.Modal(project, "Loading scene " + file.getName() + "...", false) {
+
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                createGameView();
+            }
+
+            @Override
+            public void onSuccess() {
+                ObjectHierarchy.getInstance().updateTree();
+            }
+
+        });
+    }
+
+    @Override
+    public @NotNull JComponent getComponent() {
+        return panel;
+    }
+
+    @Override
+    public @Nullable JComponent getPreferredFocusedComponent() {
+        return panel;
+    }
+
+    @Override
+    public @Nls(capitalization = Nls.Capitalization.Title) @NotNull String getName() {
+        return "GameView";
+    }
+
+    @Override
+    public void setState(@NotNull FileEditorState state) {
+
+    }
+
+    @Override
+    public boolean isModified() {
+        return false;
+    }
+
+    @Override
+    public boolean isValid() {
+        return true;
+    }
+
+    @Override
+    public void addPropertyChangeListener(@NotNull PropertyChangeListener listener) {
+
+    }
+
+    @Override
+    public void removePropertyChangeListener(@NotNull PropertyChangeListener listener) {
+
+    }
+
+    @Override
+    public VirtualFile getFile() {
+        return file;
+    }
+
+    @Override
+    public void dispose() {
+        window.getPhysicsLoop().start();
+        Dependencies.getWindowsManager().close(window);
+        disposed = true;
+        System.gc();
+    }
+
+    @Override
+    public <T> @Nullable T getUserData(@NotNull Key<T> key) {
+        return null;
+    }
+
+    @Override
+    public <T> void putUserData(@NotNull Key<T> key, @Nullable T value) {
+
+    }
+
+    public BaseWindow getWindow() {
+        return this.window;
+    }
+
+    public static GameView getInstance() {
+        return instance;
+    }
+
+    private void handleMovement() {
+
+        Vector3 rotation = camera.getRotation();
+
+        double pitchRad = Math.toRadians(rotation.getX());
+        double yawRad = Math.toRadians(rotation.getY());
+
+        // Forward
+        double dirX = Math.cos(pitchRad) * Math.sin(yawRad);
+        double dirY = Math.sin(pitchRad);
+        double dirZ = -Math.cos(pitchRad) * Math.cos(yawRad);
+
+        // Left/right
+        double rightX = Math.cos(yawRad);
+        double rightZ = Math.sin(yawRad);
+
+        double dx = dirX * forward + rightX * right;
+        double dy = dirY * forward + up;
+        double dz = dirZ * forward + rightZ * right;
+
+        Vector3 position = new Vector3(camera.getX() + dx, camera.getY() + dy, camera.getZ() + dz);
+        camera.setPosition(position);
+    }
+
+    public void handleRotation(int mouseX, int mouseY, int previousX, int previousY) {
+
+        int delta = previousX - mouseX;
+
+        double newRotationY = camera.getRotation().getY() + delta * -1;
+        newRotationY = newRotationY % 360;
+
+        delta = previousY - mouseY;
+
+        double newRotationX = camera.getRotation().getX() + delta;
+        if(newRotationX > 90) {
+            newRotationX = 90;
+        } else if(newRotationX < -90) {
+            newRotationX = -90;
+        }
+
+        Vector3 rotation = new Vector3(newRotationX, newRotationY, 30);
+        camera.setRotation(rotation);
+    }
+
+    private void createGameView() {
         InputStream stream;
         try {
             stream = file.getInputStream();
@@ -54,22 +185,23 @@ public class GameView implements FileEditor {
         Logger.setLevel(3);
         Logger.setCallerClass(true);
         Logger.setLogFile(false);
-        AppProperties appProperties;
-        try {
-            appProperties = new AppProperties("app.properties", AppSettings.getSettingsVirtualFile(project).getInputStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        Dependencies.setAppProperties(appProperties);
-        window = Dependencies.getWindowsManager().createNestedEditorWindow(stream, file.getCanonicalPath(),
-                RenderEngine.valueOf(appProperties.getProperty("renderEngine").toUpperCase()));
+        window = Dependencies.getWindowsManager().createNestedEditorWindow(stream, file.getName(), RenderEngine.OPENGL);
         GLCanvas glCanvas = ((PanelGL) window.getCurrentScene().getPanel()).getGlCanvas();
         window.setVisible(false);
         panel.add(glCanvas);
-        ObjectHierarchy.getInstance().updateTree();
         camera = window.getCurrentScene().getPanel().getCamera();
         glCanvas.setFocusable(true);
         glCanvas.requestFocus();
+        registerListeners(glCanvas);
+        new Thread(() -> {
+            while(!disposed) {
+                handleMovement();
+                new WaitForSeconds((double) 1 / 60).here();
+            }
+        }).start();
+    }
+
+    private void registerListeners(GLCanvas glCanvas) {
         glCanvas.addKeyListener(new KeyListener() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -189,127 +321,6 @@ public class GameView implements FileEditor {
 
             }
         });
-        new Thread(() -> {
-            while(!disposed) {
-                handleMovement();
-                new WaitForSeconds((double) 1 / 60).here();
-            }
-        }).start();
-    }
-
-    @Override
-    public @NotNull JComponent getComponent() {
-        return panel;
-    }
-
-    @Override
-    public @Nullable JComponent getPreferredFocusedComponent() {
-        return panel;
-    }
-
-    @Override
-    public @Nls(capitalization = Nls.Capitalization.Title) @NotNull String getName() {
-        return "GameView";
-    }
-
-    @Override
-    public void setState(@NotNull FileEditorState state) {
-
-    }
-
-    @Override
-    public boolean isModified() {
-        return false;
-    }
-
-    @Override
-    public boolean isValid() {
-        return true;
-    }
-
-    @Override
-    public void addPropertyChangeListener(@NotNull PropertyChangeListener listener) {
-
-    }
-
-    @Override
-    public void removePropertyChangeListener(@NotNull PropertyChangeListener listener) {
-
-    }
-
-    @Override
-    public VirtualFile getFile() {
-        return file;
-    }
-
-    @Override
-    public void dispose() {
-        window.getPhysicsLoop().start();
-        Dependencies.getWindowsManager().close(window);
-        disposed = true;
-        System.gc();
-    }
-
-    @Override
-    public <T> @Nullable T getUserData(@NotNull Key<T> key) {
-        return null;
-    }
-
-    @Override
-    public <T> void putUserData(@NotNull Key<T> key, @Nullable T value) {
-
-    }
-
-    public BaseWindow getWindow() {
-        return this.window;
-    }
-
-    public static GameView getInstance() {
-        return instance;
-    }
-
-    private void handleMovement() {
-
-        TransformSet rotation = camera.getRotation();
-
-        double pitchRad = Math.toRadians(rotation.getX());
-        double yawRad = Math.toRadians(rotation.getY());
-
-        // Forward
-        double dirX = Math.cos(pitchRad) * Math.sin(yawRad);
-        double dirY = Math.sin(pitchRad);
-        double dirZ = -Math.cos(pitchRad) * Math.cos(yawRad);
-
-        // Left/right
-        double rightX = Math.cos(yawRad);
-        double rightZ = Math.sin(yawRad);
-
-        double dx = dirX * forward + rightX * right;
-        double dy = dirY * forward + up;
-        double dz = dirZ * forward + rightZ * right;
-
-        TransformSet position = new TransformSet(camera.getX() + dx, camera.getY() + dy, camera.getZ() + dz);
-        camera.setPosition(position);
-    }
-
-    public void handleRotation(int mouseX, int mouseY, int previousX, int previousY) {
-
-        int delta = previousX - mouseX;
-
-        double newRotationY = camera.getRotation().getY() + delta * -1;
-        newRotationY = newRotationY % 360;
-
-        delta = previousY - mouseY;
-
-        double newRotationX = camera.getRotation().getX() + delta;
-        if(newRotationX > 90) {
-            newRotationX = 90;
-        } else if(newRotationX < -90) {
-            newRotationX = -90;
-        }
-
-        TransformSet rotation = new TransformSet(newRotationX, newRotationY, 30);
-        camera.setRotation(rotation);
     }
 
 }
