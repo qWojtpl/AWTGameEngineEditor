@@ -16,17 +16,19 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class AddComponentModel implements ChooseByNameModel {
+public class AddClassModel implements ChooseByNameModel {
 
+    private final String prompt;
     private final List<Class<?>> classList = new ArrayList<>();
 
-    public AddComponentModel() {
-        Sequence<Class<?>> classSequence = ReflectionScannerKt.scanForClasses(getClass().getClassLoader(), "pl.AWTGameEngine.components");
+    public AddClassModel(String prompt, Class<?> baseClass, String pckg) {
+        this.prompt = prompt;
+        Sequence<Class<?>> classSequence = ReflectionScannerKt.scanForClasses(getClass().getClassLoader(), pckg);
         Iterator<Class<?>> iterator = classSequence.iterator();
 
         while(iterator.hasNext()) {
             Class<?> clazz = iterator.next();
-            if(ObjectComponent.class.isAssignableFrom(clazz)) {
+            if(baseClass.isAssignableFrom(clazz)) {
                 classList.add(clazz);
             }
         }
@@ -34,7 +36,7 @@ public class AddComponentModel implements ChooseByNameModel {
 
     @Override
     public @Nls(capitalization = Nls.Capitalization.Sentence) String getPromptText() {
-        return "Select component";
+        return prompt;
     }
 
     @Override

@@ -19,7 +19,7 @@ import pl.AWTGameEngine.engine.Logger;
 import pl.AWTGameEngine.objects.GameObject;
 import pl.AWTGameEngine.scenes.Scene;
 import pl.AWTGameEngineEditor.center.GameView;
-import pl.AWTGameEngineEditor.dialogs.AddComponentModel;
+import pl.AWTGameEngineEditor.dialogs.AddClassModel;
 import pl.AWTGameEngineEditor.dialogs.ComponentDialog;
 import pl.AWTGameEngineEditor.dialogs.ObjectPropertiesDialog;
 
@@ -84,7 +84,7 @@ public class ObjectHierarchy implements ToolWindowFactory {
                         // Add component
                         JMenuItem addComponent = new JMenuItem("Add component", AllIcons.General.Add);
                         addComponent.addActionListener(al -> {
-                            ChooseByNamePopup p = ChooseByNamePopup.createPopup(project, new AddComponentModel(), (PsiElement) null);
+                            ChooseByNamePopup p = ChooseByNamePopup.createPopup(project, new AddClassModel("Select component", ObjectComponent.class, "pl.AWTGameEngine.components"), (PsiElement) null);
                             p.invoke(new ChooseByNamePopupComponent.Callback() {
                                 @Override
                                 public void elementChosen(Object element) {
