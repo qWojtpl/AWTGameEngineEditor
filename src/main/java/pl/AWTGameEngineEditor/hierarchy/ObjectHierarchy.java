@@ -1,19 +1,25 @@
 package pl.AWTGameEngineEditor.hierarchy;
 
 import com.intellij.icons.AllIcons;
+import com.intellij.ide.util.gotoByName.ChooseByNamePopup;
+import com.intellij.ide.util.gotoByName.ChooseByNamePopupComponent;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowFactory;
+import com.intellij.psi.PsiElement;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.treeStructure.SimpleTree;
 import org.jetbrains.annotations.NotNull;
 import pl.AWTGameEngine.components.base.ObjectComponent;
+import pl.AWTGameEngine.engine.Logger;
 import pl.AWTGameEngine.objects.GameObject;
 import pl.AWTGameEngine.scenes.Scene;
 import pl.AWTGameEngineEditor.center.GameView;
+import pl.AWTGameEngineEditor.dialogs.AddComponentModel;
 import pl.AWTGameEngineEditor.dialogs.ComponentDialog;
 import pl.AWTGameEngineEditor.dialogs.ObjectPropertiesDialog;
 
@@ -78,13 +84,27 @@ public class ObjectHierarchy implements ToolWindowFactory {
                         // Add component
                         JMenuItem addComponent = new JMenuItem("Add component", AllIcons.General.Add);
                         addComponent.addActionListener(al -> {
-
+                            ChooseByNamePopup p = ChooseByNamePopup.createPopup(project, new AddComponentModel(), (PsiElement) null);
+                            p.invoke(new ChooseByNamePopupComponent.Callback() {
+                                @Override
+                                public void elementChosen(Object element) {
+                                    Class<? extends ObjectComponent> clazz = ((Class<?>) element).asSubclass(ObjectComponent.class);
+                                    try {
+                                        ObjectComponent o = clazz.getConstructor(GameObject.class).newInstance((GameObject) userObject);
+                                        ((GameObject) userObject).addComponent(o);
+                                        updateTree();
+                                    } catch (Exception e) {
+                                        Logger.exception("Cannot create ObjectComponent", e);
+                                    }
+                                }
+                            }, ModalityState.defaultModalityState(), true);
                         });
                         popup.add(addComponent);
                         // Remove object
                         JMenuItem removeObject = new JMenuItem("Remove object", AllIcons.General.Remove);
                         removeObject.addActionListener(al -> {
-
+                            GameView.getInstance().getWindow().getCurrentScene().removeGameObject((GameObject) userObject);
+                            ObjectHierarchy.getInstance().updateTree();
                         });
                         popup.add(removeObject);
                     } else if(userObject instanceof ObjectComponent) {
@@ -97,7 +117,8 @@ public class ObjectHierarchy implements ToolWindowFactory {
                         // Remove component
                         JMenuItem removeComponent = new JMenuItem("Remove component", AllIcons.General.Remove);
                         removeComponent.addActionListener(al -> {
-
+                            ((ObjectComponent) userObject).getObject().removeComponent((ObjectComponent) userObject);
+                            ObjectHierarchy.getInstance().updateTree();
                         });
                         popup.add(removeComponent);
                     }
