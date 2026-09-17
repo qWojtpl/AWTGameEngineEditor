@@ -2,7 +2,6 @@ package pl.AWTGameEngineEditor.generators;
 
 import com.intellij.ide.util.projectWizard.ModuleBuilder;
 import com.intellij.openapi.module.ModuleType;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,7 +10,7 @@ import javax.swing.*;
 public class ProjectGenerator extends ModuleBuilder {
 
     @Override
-    public @Nls(capitalization = Nls.Capitalization.Title) String getPresentableName() {
+    public String getPresentableName() {
         return "AWT Game Engine";
     }
 

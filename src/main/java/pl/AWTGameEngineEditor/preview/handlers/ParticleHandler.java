@@ -23,7 +23,7 @@ public class ParticleHandler implements PreviewHandler {
         emitter.setFadeOutStart(e.getFadeOutStart());
         emitter.setParticleSize(e.getParticleSize());
         emitter.setLooped(e.isLooped());
-        emitter.setSprite(e.getSprite());
+        emitter.getMaterial().setSprite(e.getMaterial().getSprite());
         emitter.setTtl(e.getTtl());
         emitter.setIterationsPerSecond(e.getIterationsPerSecond());
         emitter.setIterationStep(e.getIterationStep());

@@ -26,8 +26,8 @@ public class ModelHandler implements PreviewHandler {
 
         Base3DShape previewModel = (Base3DShape) previewObject.getComponentByClass(Model3D.class);
 
-        previewModel.setSprite(sceneModel.getSprite());
-        previewModel.setColor(sceneModel.getColor());
+        previewModel.getMaterial().setSprite(sceneModel.getMaterial().getSprite());
+//        previewModel.getMaterial().setColor(sceneModel.getMaterial().getColor());
         previewModel.setShader(Shaders.of(previewObject.getScene().getWindow(), sceneModel.getShader().getClass()));
         previewModel.setRepeatTexture(sceneModel.getRepeatTexture());
         previewModel.setShapePath(sceneModel.getShapePath());

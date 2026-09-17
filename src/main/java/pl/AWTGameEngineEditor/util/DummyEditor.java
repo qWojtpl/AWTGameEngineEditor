@@ -38,7 +38,7 @@ public class DummyEditor extends UserDataHolderBase implements FileEditor {
     }
 
     @Override
-    public @Nls(capitalization = Nls.Capitalization.Title) @NotNull String getName() {
+    public @NotNull String getName() {
         return file.getName();
     }
 

@@ -4,11 +4,9 @@ import com.intellij.ide.util.gotoByName.ChooseByNameModel;
 import com.intellij.openapi.util.NlsContexts;
 import com.jetbrains.rd.util.reflection.ReflectionScannerKt;
 import kotlin.sequences.Sequence;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import pl.AWTGameEngine.components.base.ObjectComponent;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,7 +33,7 @@ public class AddClassModel implements ChooseByNameModel {
     }
 
     @Override
-    public @Nls(capitalization = Nls.Capitalization.Sentence) String getPromptText() {
+    public String getPromptText() {
         return prompt;
     }
 
@@ -81,15 +79,17 @@ public class AddClassModel implements ChooseByNameModel {
         };
     }
 
+    @NotNull
     @Override
-    public String @NotNull @Nls [] getNames(boolean checkBoxState) {
+    public String[] getNames(boolean checkBoxState) {
         return classList.stream()
                 .map(Class::getCanonicalName)
                 .toArray(String[]::new);
     }
 
+    @NotNull
     @Override
-    public Object @NotNull [] getElementsByName(@NotNull String name, boolean checkBoxState, @NotNull String pattern) {
+    public Object[] getElementsByName(@NotNull String name, boolean checkBoxState, @NotNull String pattern) {
         return classList.stream()
                 .filter(clazz -> clazz.getCanonicalName().equals(name))
                 .toArray();
@@ -103,8 +103,9 @@ public class AddClassModel implements ChooseByNameModel {
         return null;
     }
 
+    @NotNull
     @Override
-    public String @NotNull [] getSeparators() {
+    public String[] getSeparators() {
         return new String[0];
     }
 

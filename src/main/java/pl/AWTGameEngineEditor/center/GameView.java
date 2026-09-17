@@ -8,25 +8,28 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.jogamp.opengl.awt.GLCanvas;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.AWTGameEngine.Dependencies;
 import pl.AWTGameEngine.engine.Logger;
+import pl.AWTGameEngine.engine.PhysXManager;
 import pl.AWTGameEngine.engine.WaitForSeconds;
 import pl.AWTGameEngine.engine.enums.KeyCode;
 import pl.AWTGameEngine.engine.enums.RenderEngine;
+import pl.AWTGameEngine.engine.panels.FilamentPanel;
 import pl.AWTGameEngine.engine.panels.PanelGL;
+import pl.AWTGameEngine.objects.RaycastResult;
 import pl.AWTGameEngine.objects.render.Camera;
 import pl.AWTGameEngine.objects.transform.Vector3;
 import pl.AWTGameEngine.windows.BaseWindow;
 import pl.AWTGameEngineEditor.hierarchy.ObjectHierarchy;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeListener;
 import java.io.InputStream;
+import java.util.List;
 
 public class GameView implements FileEditor {
 
@@ -71,7 +74,7 @@ public class GameView implements FileEditor {
     }
 
     @Override
-    public @Nls(capitalization = Nls.Capitalization.Title) @NotNull String getName() {
+    public @NotNull String getName() {
         return "GameView";
     }
 
@@ -186,13 +189,22 @@ public class GameView implements FileEditor {
         Logger.setCallerClass(true);
         Logger.setLogFile(false);
         window = Dependencies.getWindowsManager().createNestedEditorWindow(stream, file.getName(), RenderEngine.OPENGL);
-        GLCanvas glCanvas = ((PanelGL) window.getCurrentScene().getPanel()).getGlCanvas();
+        window.getPhysicsLoop().executeNextFrameOperations(); // register all physics objects
+        Canvas canvas = null;
+        if(window.getCurrentScene().getPanel() instanceof PanelGL panel) {
+            canvas = panel.getGlCanvas();
+        } else if(window.getCurrentScene().getPanel() instanceof FilamentPanel panel) {
+            canvas = panel.getCanvas();
+        }
+        if(canvas == null) {
+            return;
+        }
         window.setVisible(false);
-        panel.add(glCanvas);
+        panel.add(canvas);
         camera = window.getCurrentScene().getPanel().getCamera();
-        glCanvas.setFocusable(true);
-        glCanvas.requestFocus();
-        registerListeners(glCanvas);
+        canvas.setFocusable(true);
+        canvas.requestFocus();
+        registerListeners(canvas);
         new Thread(() -> {
             while(!disposed) {
                 handleMovement();
@@ -201,7 +213,7 @@ public class GameView implements FileEditor {
         }).start();
     }
 
-    private void registerListeners(GLCanvas glCanvas) {
+    private void registerListeners(Canvas glCanvas) {
         glCanvas.addKeyListener(new KeyListener() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -297,7 +309,28 @@ public class GameView implements FileEditor {
         glCanvas.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                Camera camera = window.getCurrentScene().getPanel().getCamera();
 
+                Vector3 ray = getMouseRayDirection(
+                        e.getX(),
+                        e.getY(),
+                        glCanvas.getWidth(),
+                        glCanvas.getHeight(),
+                        camera.getRotation(),
+                        60
+                );
+
+                List<RaycastResult> results = PhysXManager.getInstance().getScene(window.getCurrentScene()).createRaycast(
+                        new Vector3(camera.getX(), camera.getY(), camera.getZ()),
+                        ray,
+                        1000
+                );
+                if(results.isEmpty()) {
+                    System.out.println("EMPTY");
+                } else {
+                    RaycastResult last = results.get(results.size() - 1);
+                    System.out.println(last.getObject().getIdentifier());
+                }
             }
 
             @Override
@@ -321,6 +354,51 @@ public class GameView implements FileEditor {
 
             }
         });
+    }
+
+    public static Vector3 getMouseRayDirection(
+            float mouseX,
+            float mouseY,
+            float screenWidth,
+            float screenHeight,
+            Vector3 rotation,
+            float fov
+    ) {
+        double pitch = Math.toRadians(rotation.getX());
+        double yaw = Math.toRadians(rotation.getY());
+
+        Vector3 forward = new Vector3(
+                Math.cos(pitch) * Math.sin(yaw),
+                Math.sin(pitch),
+                -Math.cos(pitch) * Math.cos(yaw)
+        ).normalize();
+
+        Vector3 right = new Vector3(
+                Math.cos(yaw),
+                0,
+                Math.sin(yaw)
+        ).normalize();
+
+        Vector3 up = new Vector3(
+                right.getY() * forward.getZ() - right.getZ() * forward.getY(),
+                right.getZ() * forward.getX() - right.getX() * forward.getZ(),
+                right.getX() * forward.getY() - right.getY() * forward.getX()
+        ).normalize();
+
+        double ndcX = (2.0 * mouseX / screenWidth) - 1.0;
+        double ndcY = 1.0 - (2.0 * mouseY / screenHeight);
+
+        double aspect = screenWidth / screenHeight;
+        double tanFov = Math.tan(Math.toRadians(fov) * 0.5);
+
+        double cameraX = ndcX * aspect * tanFov;
+        double cameraY = ndcY * tanFov;
+
+        return new Vector3(
+                forward.getX() + right.getX() * cameraX + up.getX() * cameraY,
+                forward.getY() + right.getY() * cameraX + up.getY() * cameraY,
+                forward.getZ() + right.getZ() * cameraX + up.getZ() * cameraY
+        ).normalize();
     }
 
 }

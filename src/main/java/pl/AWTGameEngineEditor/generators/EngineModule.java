@@ -6,7 +6,6 @@ import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
-import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -29,12 +28,12 @@ public class EngineModule extends ModuleType<ModuleBuilder> {
     }
 
     @Override
-    public @NotNull @Nls(capitalization = Nls.Capitalization.Title) String getName() {
+    public @NotNull String getName() {
         return "AWTGameEngine";
     }
 
     @Override
-    public @NotNull @Nls(capitalization = Nls.Capitalization.Sentence) String getDescription() {
+    public @NotNull String getDescription() {
         return "";
     }
 
@@ -43,8 +42,9 @@ public class EngineModule extends ModuleType<ModuleBuilder> {
         return AllIcons.Nodes.Project;
     }
 
+    @NotNull
     @Override
-    public ModuleWizardStep @NotNull [] createWizardSteps(@NotNull WizardContext wizardContext, @NotNull ModuleBuilder moduleBuilder, @NotNull ModulesProvider modulesProvider) {
+    public ModuleWizardStep[] createWizardSteps(@NotNull WizardContext wizardContext, @NotNull ModuleBuilder moduleBuilder, @NotNull ModulesProvider modulesProvider) {
         return new ModuleWizardStep[]{new ProjectSettings()};
     }
 }
